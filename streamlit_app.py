@@ -44,7 +44,19 @@ streamlit.header("The fruit load list contains:")
 streamlit.dataframe(my_data_rows)
 
 fruit_insert = streamlit.text_input('What fruit would you like to add?')
-frutas_lista = [fruta.strip() for fruta in fruit_insert.split(',') if fruta.strip()]
 
-add_my_fruit = my_cur.executemany("INSERT into fruit_load_list (FRUIT_NAME) VALUES (%s)", [(fruta,) for fruta in frutas_lista])
-streamlit.success('Thanks for adding {}'.format(fruit_insert))
+# Verifica si fruit_insert tiene un valor antes de intentar dividirlo
+if fruit_insert:
+    frutas_lista = [fruta.strip() for fruta in fruit_insert.split(',') if fruta.strip()]
+    
+    try:
+        add_my_fruit = my_cur.executemany("INSERT into fruit_load_list (FRUIT_NAME) VALUES (%s)", [(fruta,) for fruta in frutas_lista])
+        conn.commit()
+        streamlit.success('Thanks for adding {}'.format(fruit_insert))
+    except Exception as e:
+        streamlit.error('Error adding fruits to Snowflake: {}'.format(str(e)))
+    finally:
+        if conn:
+            conn.close()
+else:
+    streamlit.warning('Please enter at least one fruit.')
